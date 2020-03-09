@@ -1,3 +1,11 @@
+# Data files
+*.tif
+usefulGDAL.py
+
+
+
+# The rest of this was put in by GitHub by default
+# __________________________________________________
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
