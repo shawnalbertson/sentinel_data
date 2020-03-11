@@ -15,7 +15,6 @@ def cloudFilter(band):
 #           1 in 2**11 place for cirrus clouds
 
 # ma.masked_where(condition, array).mask returns boolean array
-#           False where condition is met (not sure about this)
 # Condition is based on cloud mask definition from band 16 (see above)
 
-        return ma.masked_where(band.array == 2048, band.array).mask
+        return ma.masked_where(band.array >= 1024, band.array).mask

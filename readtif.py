@@ -3,14 +3,12 @@ import numpy as np
 import numpy.ma as ma
 import matplotlib.pyplot as plt
 from helperFunctions import *
-import time
 
 class Data:
+    """
+    Dataset class to hold important values and open file
+    """
     def __init__(self, filename):
-        """
-        Create a Dataset object
-        Define important Dataset values
-        """
 # Create a Dataset object from first file location using 'Open'
         self.dataObject = gdal.Open(filename)
 
@@ -21,6 +19,10 @@ class Data:
 
 
 class Band:
+    """
+    Band class to access data from particular band in dataset
+    Creates array of data
+    """
     def __init__(self, dataset, bandNumber):
         self.dataset = dataset
         self.bandNumber = bandNumber
@@ -45,28 +47,47 @@ class Band:
         ax = fig.add_subplot(111)
         plt.contourf(self.array, cmap = "viridis",
         levels = list(range(0, int(np.amax(self.array))+resolution, resolution)))
-        plt.title("Example band visualization")
+        plt.title("Temperature data | Clouds present -> 0")
         cbar = plt.colorbar()
         plt.gca().set_aspect('equal', adjustable='box')
         plt.show()
 
+    def cutAnomolies(self, cutoff):
+        """
+        Trim any values more than 'cutoff' standard deviations from mean in dataset
+        Originally implemented to ignore outliers in salinity processed data
+        """
+        self.std = np.std(self.array)
+        self.mean = np.mean(self.array)
+        upperCutoff = self.mean + cutoff*self.std
+        self.array[self.array > upperCutoff] = 0
+
 
 # Local .tif file locations
+og = 'data/20161130T110422_20161130T130757_T31UCT.tif'
 og_wlm = 'data/landmask_20161130T110422_20161130T130757_T31UCT.tif'
 og_wlm_processed = 'data/landmask_20161130T110422_20161130T130757_T31UCT_processed.tif'
 
-
+# Import all datasets
+original = Data(og)
 unprocessed = Data(og_wlm)
-clouds = Band(unprocessed, 16)
-
-
 processed = Data(og_wlm_processed)
+
+
+# Establish band objects
+cloudBand = Band(original, 16)
+salinity = Band(processed, 1)
 temp = Band(processed, 2)
-cloudMask = cloudFilter(clouds)
-temp.array[cloudFilter(clouds)] = 0
-temp.display()
 
 
+# # Visualize salinity data
+# salinity.cutAnomolies(4)
+# salinity.array[cloudFilter(cloudBand)] = 0
+# salinity.display(10)
+
+# # Visualize temperature data
+# temp.array[cloudFilter(cloudBand)] = 0
+# temp.display(10)
 
 
 
