@@ -50,56 +50,28 @@ class Band:
         plt.gca().set_aspect('equal', adjustable='box')
         plt.show()
 
-    def getClouds(self):
-        """
-        Get information about cloud location to inform cloud mask
-
-        TODO: Use class structure to better store cloudMask array
-        """
-        if self.dataset.num_bands != 16:
-            print("There's no cloud data here! Did you pass in the correct dataset?")
-        else:
-# 16th Band has cloud mask where:
-#           1 in 2**10 place for opaque clouds and
-#           1 in 2**11 place for cirrus clouds
-# Should be zero otherwise, so >= condition should work (better but longer version commented below)
-
-# Self.clouds is the array from the cloud mask band
-            self.clouds = self.getArray(16)
-
-# Use numpy masked module,
-# masked_where().mask returns boolean array, anywhere that meets condition returns False
-# Condition is based on cloud mask definition from band 16 (see above)
-
-            # opaqueMask = ma.masked_where(self.clouds, self.clouds==1024).mask
-            # cirrusMask = ma.masked_where(self.clouds, self.clouds==2048).mask
-            # self.cloudMask = np.logical_or(opaqueMask, cirrusMask)
-
-def cloudFilter(band):
-    """
-    Assumes that you are passing in band 16 of unprocessed data - cloud mask
-    Returns boolean array of clouds
-    """
-    if band.bandNumber != 16:
-        print("There's no cloud data here! Did you pass in the correct array?")
-
-    else:
-        return ma.masked_where(band.array == 2048, band.array).mask
-
 
 # Local .tif file locations
 og_wlm = 'data/landmask_20161130T110422_20161130T130757_T31UCT.tif'
 og_wlm_processed = 'data/landmask_20161130T110422_20161130T130757_T31UCT_processed.tif'
 
 
-
-
-# processed = Data(og_wlm_processed)
-# temp = Band(processed, 2)
-# temp.display()
-
 unprocessed = Data(og_wlm)
-# array1 = Band(unprocessed, 1)
-# array1.display(100)
 clouds = Band(unprocessed, 16)
-print(cloudFilter(clouds).astype(float).sum())
+
+
+processed = Data(og_wlm_processed)
+temp = Band(processed, 2)
+cloudMask = cloudFilter(clouds)
+temp.array[cloudFilter(clouds)] = 0
+temp.display()
+
+
+
+
+
+
+
+
+
+#
