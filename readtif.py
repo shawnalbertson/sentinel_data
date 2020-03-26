@@ -37,7 +37,12 @@ class Band:
         self.array = self.band.ReadAsArray().astype(np.float)
 
 # Set all instances of NaN to 0
-        self.array[np.isnan(self.array)] = 0
+        # self.array[np.isnan(self.array)] = 0
+        # self.max = int(np.amax(self.array))
+        # self.min = int(np.amin(a[np.nonzero(a)])
+
+        self.max = int(np.amax(np.nan_to_num(self.array)[np.nonzero(np.nan_to_num(self.array))]))
+        self.min = int(np.amin(np.nan_to_num(self.array)[np.nonzero(np.nan_to_num(self.array))]))
 
     def display(self, resolution=50):
         """
@@ -45,8 +50,8 @@ class Band:
         """
         fig = plt.figure(figsize = (12, 12))
         ax = fig.add_subplot(111)
-        plt.contourf(self.array, cmap = "viridis",
-        levels = list(range(0, int(np.amax(self.array))+resolution, resolution)))
+        thisPlot = plt.contourf(self.array, cmap = "ocean",
+        levels = list(range(self.min, self.max+resolution, resolution)))
         plt.title("Temperature data | Clouds present -> 0")
         cbar = plt.colorbar()
         plt.gca().set_aspect('equal', adjustable='box')
@@ -85,9 +90,11 @@ temp = Band(processed, 2)
 # salinity.array[cloudFilter(cloudBand)] = 0
 # salinity.display(10)
 
-# # Visualize temperature data
-# temp.array[cloudFilter(cloudBand)] = 0
-# temp.display(10)
+# Visualize temperature data
+temp.cutAnomolies(4)
+temp.array[cloudFilter(cloudBand)] = 0
+temp.array[temp.array==0]=np.nan
+temp.display(10)
 
 
 
