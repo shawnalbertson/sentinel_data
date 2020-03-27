@@ -3,29 +3,31 @@ import numpy as np
 import numpy.ma as ma
 import matplotlib.pyplot as plt
 from helperFunctions import *
+import time
 
 class Data:
     """
     Dataset class to hold important values and open file
     """
-    def __init__(self, filename):
+    def __init__(self, file):
 # Create a Dataset object from first file location using 'Open'
-        self.dataObject = gdal.Open(filename)
+        self.dataObject = gdal.Open(file)
 
 # Define number of bands in file and x-y size of file
         self.num_bands = self.dataObject.RasterCount
         self.cols = self.dataObject.RasterXSize
         self.rows = self.dataObject.RasterYSize
 
-
 class Band:
     """
     Band class to access data from particular band in dataset
     Creates array of data
     """
-    def __init__(self, dataset, bandNumber):
+    def __init__(self, dataset, bandNumber, SDcutoff, name):
         self.dataset = dataset
         self.bandNumber = bandNumber
+        self.name = name
+        self.cutoff = SDcutoff
 
 # def getArray(self):
         try:
@@ -36,13 +38,23 @@ class Band:
             sys.exit(1)
         self.array = self.band.ReadAsArray().astype(np.float)
 
-# Set all instances of NaN to 0
-        # self.array[np.isnan(self.array)] = 0
-        # self.max = int(np.amax(self.array))
-        # self.min = int(np.amin(a[np.nonzero(a)])
+
+        self.std = np.std(self.array)
+        self.mean = np.mean(self.array)
+        #
+        self.upperCutoff = self.mean + self.cutoff * self.std
+
+        # TODO: Figure out why this throws the RuntimeWarning for invalid value
+        # TODO: Figure out a good way to cut lower bounded data in the 1-10 range
+        #           Maybe try to visualize data distribution in a histogram
+        self.array[np.nan_to_num(self.array) > self.upperCutoff] = np.nan
+
 
         self.max = int(np.amax(np.nan_to_num(self.array)[np.nonzero(np.nan_to_num(self.array))]))
         self.min = int(np.amin(np.nan_to_num(self.array)[np.nonzero(np.nan_to_num(self.array))]))
+
+        # print(self.name, " ", self.max, self.min, "stds (old,new): %s, %s" % (self.std, self.std_new))
+
 
     def display(self, resolution=50):
         """
@@ -62,10 +74,8 @@ class Band:
         Trim any values more than 'cutoff' standard deviations from mean in dataset
         Originally implemented to ignore outliers in salinity processed data
         """
-        self.std = np.std(self.array)
-        self.mean = np.mean(self.array)
-        upperCutoff = self.mean + cutoff*self.std
-        self.array[self.array > upperCutoff] = 0
+
+        pass
 
 
 # Local .tif file locations
@@ -80,23 +90,15 @@ processed = Data(og_wlm_processed)
 
 
 # Establish band objects
-cloudBand = Band(original, 16)
-salinity = Band(processed, 1)
-temp = Band(processed, 2)
+cloudBand = Band(original, 16, 4, "Cloud Mask")
+salinity = Band(processed, 1, 3, "Salinity")
+temp = Band(processed, 2, 3, "Temperature")
 
 
-# # Visualize salinity data
-# salinity.cutAnomolies(4)
-# salinity.array[cloudFilter(cloudBand)] = 0
-# salinity.display(10)
-
-# Visualize temperature data
-temp.cutAnomolies(4)
-temp.array[cloudFilter(cloudBand)] = 0
-temp.array[temp.array==0]=np.nan
-temp.display(10)
 
 
+# runProcessing(temp, cloudBand, 50)
+runProcessing(salinity, cloudBand, 10)
 
 
 
