@@ -36,24 +36,25 @@ class Band:
         except RuntimeError:
             print('Band (%i) not found' % self.bandNumber)
             sys.exit(1)
+
+# Get array
         self.array = self.band.ReadAsArray().astype(np.float)
 
-
-        self.std = np.std(self.array)
-        self.mean = np.mean(self.array)
-        #
-        self.upperCutoff = self.mean + self.cutoff * self.std
-
-        # TODO: Figure out why this throws the RuntimeWarning for invalid value
-        # TODO: Figure out a good way to cut lower bounded data in the 1-10 range
-        #           Maybe try to visualize data distribution in a histogram
-        self.array[np.nan_to_num(self.array) > self.upperCutoff] = np.nan
+# Gather important statistics accoutning for nan
+# Standard deviation, mean, min, and max
+        self.std = np.nanstd(self.array)
+        self.mean = np.nanmean(self.array)
+        self.min = int(np.nanmin(self.array))
+        self.max = int(np.nanmax(self.array))
 
 
-        self.max = int(np.amax(np.nan_to_num(self.array)[np.nonzero(np.nan_to_num(self.array))]))
-        self.min = int(np.amin(np.nan_to_num(self.array)[np.nonzero(np.nan_to_num(self.array))]))
 
-        # print(self.name, " ", self.max, self.min, "stds (old,new): %s, %s" % (self.std, self.std_new))
+        self.upperCutoff = int(self.mean + self.cutoff * self.std)
+        # self.upperCutoff = 180
+
+# This is a hard coded value that may want to change depending on the data
+        self.lowerCutoff = 100
+
 
 
     def display(self, resolution=50):
@@ -63,25 +64,26 @@ class Band:
         fig = plt.figure(figsize = (12, 12))
         ax = fig.add_subplot(111)
         thisPlot = plt.contourf(self.array, cmap = "ocean",
-        levels = list(range(self.min, self.max+resolution, resolution)))
-        plt.title("Temperature data | Clouds present -> 0")
+        levels = list(range(self.lowerCutoff, self.upperCutoff, resolution)))
+        plt.title("Temperature")
         cbar = plt.colorbar()
         plt.gca().set_aspect('equal', adjustable='box')
         plt.show()
 
-    def cutAnomolies(self, cutoff):
+    def cutAnomolies(self):
         """
         Trim any values more than 'cutoff' standard deviations from mean in dataset
         Originally implemented to ignore outliers in salinity processed data
         """
-
         pass
+        # self.array[np.nan_to_num(self.array)>self.upperCutoff]=np.nan
 
 
 # Local .tif file locations
-og = 'data/20161130T110422_20161130T130757_T31UCT.tif'
-og_wlm = 'data/landmask_20161130T110422_20161130T130757_T31UCT.tif'
-og_wlm_processed = 'data/landmask_20161130T110422_20161130T130757_T31UCT_processed.tif'
+og = 'files/original.tif'
+og_wlm = 'files/original_landmask.tif'
+og_wlm_processed = 'files/processed_landmask.tif'
+
 
 # Import all datasets
 original = Data(og)
@@ -90,18 +92,16 @@ processed = Data(og_wlm_processed)
 
 
 # Establish band objects
+someUnprocessed = Band(unprocessed, 3, 4, "some landmask")
 cloudBand = Band(original, 16, 4, "Cloud Mask")
-salinity = Band(processed, 1, 3, "Salinity")
+salinity = Band(processed, 1, 3.5, "Salinity")
 temp = Band(processed, 2, 3, "Temperature")
 
+# testArray = salinity
+# print(np.count_nonzero(np.isnan(testArray.array)))
+# print(np.count_nonzero(testArray.array==0))
 
 
 
-# runProcessing(temp, cloudBand, 50)
-runProcessing(salinity, cloudBand, 10)
-
-
-
-
-
-#
+runProcessing(temp, cloudBand, 10)
+# runProcessing(salinity, cloudBand, 10)
