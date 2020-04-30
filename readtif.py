@@ -65,7 +65,7 @@ class Band:
         ax = fig.add_subplot(111)
         thisPlot = plt.contourf(self.array, cmap = "ocean",
         levels = list(range(self.lowerCutoff, self.upperCutoff, resolution)))
-        plt.title("Temperature")
+        plt.title("%s" % self.name)
         cbar = plt.colorbar()
         plt.gca().set_aspect('equal', adjustable='box')
         plt.show()
@@ -103,5 +103,5 @@ temp = Band(processed, 2, 3, "Temperature")
 
 
 
-runProcessing(temp, cloudBand, 10)
-# runProcessing(salinity, cloudBand, 10)
+# runProcessing(temp, cloudBand, 10)
+runProcessing(salinity, cloudBand, 10)
