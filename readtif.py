@@ -40,22 +40,51 @@ class Band:
 # Get array
         self.array = self.band.ReadAsArray().astype(np.float)
 
-# Gather important statistics accoutning for nan
+
+# FILTER1:  Remove extreme outliers (4 standard deviations)
+        self.array[np.nan_to_num(self.array)>np.nanmean(self.array)+np.nanstd(self.array)*4] = np.pi
+
+# Gather important statistics accounting for nan
 # Standard deviation, mean, min, and max
         self.std = np.nanstd(self.array)
         self.mean = np.nanmean(self.array)
         self.min = int(np.nanmin(self.array))
         self.max = int(np.nanmax(self.array))
+        self.length = len(self.array.flatten())
+
+
+
+
+        # Make alternative array for comparing (numpy doesn't like '>' with np.nan)
+        self.clean = np.nan_to_num(self.array)
+
+
 
 
 
         self.upperCutoff = int(self.mean + self.cutoff * self.std)
         # self.upperCutoff = 180
-
 # This is a hard coded value that may want to change depending on the data
-        self.lowerCutoff = 100
+        # self.lowerCutoff = 50
+        self.lowerCutoff = int(helpLowerCutoff(self,50))
 
-
+# def getLowerCutoff(self, binNum):
+#     """
+#     Split all data into even bins
+#     Find the largest bin
+#     Use it as a reference for the lower cutoff value
+#     """
+#     # band.array[band.clean>band.mean+band.std*3]=0
+#     binSize, bounds = np.histogram(self.clean[self.clean!=0], binNum)
+#
+#     biggestBin = np.max(binSize)
+#     for x in binSize:
+#         if x > biggestBin*.01:
+#             binLevel = np.where(binSize==x)[0][0]
+#             continue
+#
+#     self.lowerCutoff = bounds[binLevel]
+#     return
 
     def display(self, resolution=50):
         """
@@ -65,18 +94,14 @@ class Band:
         ax = fig.add_subplot(111)
         thisPlot = plt.contourf(self.array, cmap = "ocean",
         levels = list(range(self.lowerCutoff, self.upperCutoff, resolution)))
-        plt.title("%s" % self.name)
+        plt.title("%s | Lower cutoff = %d, Upper cutoff = %d" % (self.name, self.lowerCutoff, self.upperCutoff))
         cbar = plt.colorbar()
         plt.gca().set_aspect('equal', adjustable='box')
         plt.show()
 
-    def cutAnomolies(self):
-        """
-        Trim any values more than 'cutoff' standard deviations from mean in dataset
-        Originally implemented to ignore outliers in salinity processed data
-        """
-        pass
-        # self.array[np.nan_to_num(self.array)>self.upperCutoff]=np.nan
+
+
+
 
 
 # Local .tif file locations
@@ -92,9 +117,9 @@ processed = Data(og_wlm_processed)
 
 
 # Establish band objects
-someUnprocessed = Band(unprocessed, 3, 4, "some landmask")
-cloudBand = Band(original, 16, 4, "Cloud Mask")
-salinity = Band(processed, 1, 3.5, "Salinity")
+someUnprocessed = Band(unprocessed, 3, 3, "some landmask")
+cloudBand = Band(original, 16, 3, "Cloud Mask")
+salinity = Band(processed, 1, 3, "Salinity")
 temp = Band(processed, 2, 3, "Temperature")
 
 # testArray = salinity
@@ -103,5 +128,12 @@ temp = Band(processed, 2, 3, "Temperature")
 
 
 
-# runProcessing(temp, cloudBand, 10)
-runProcessing(salinity, cloudBand, 10)
+# runProcessing(salinity, cloudBand, 10)
+# print(salinity.name, make_histogram(salinity))
+
+
+runProcessing(temp, cloudBand, 10)
+# print(temp.name, make_histogram(temp))
+# print(temp.length*.001)
+
+# print(.001*len(salinity.array.flatten()))
