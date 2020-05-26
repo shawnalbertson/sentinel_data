@@ -41,7 +41,7 @@ class Band:
         self.array = self.band.ReadAsArray().astype(np.float)
 
 
-# FILTER1:  Remove extreme outliers (4 standard deviations)
+# FILTER1:  Remove extreme outliers (4 standard deviations) -> set to PI
         self.array[np.nan_to_num(self.array)>np.nanmean(self.array)+np.nanstd(self.array)*4] = np.pi
 
 # Gather important statistics accounting for nan
@@ -53,20 +53,21 @@ class Band:
         self.length = len(self.array.flatten())
 
 
-
-
-        # Make alternative array for comparing (numpy doesn't like '>' with np.nan)
+# Make alternative array for comparing (numpy doesn't like '>' with np.nan)
         self.clean = np.nan_to_num(self.array)
 
 
-
-
-
-        self.upperCutoff = int(self.mean + self.cutoff * self.std)
         # self.upperCutoff = 180
-# This is a hard coded value that may want to change depending on the data
+        # This is a hard coded value that may want to change depending on the data
         # self.lowerCutoff = 50
-        self.lowerCutoff = int(helpLowerCutoff(self,50))
+
+# Trying some stuff
+        # self.upperCutoff = int(self.mean + self.cutoff * self.std)
+        # self.lowerCutoff = int(helpLowerCutoff(self,50))
+
+        x = .005
+        self.lowerCutoff = int(np.quantile(self.clean[self.clean!=0],x))
+        self.upperCutoff = int(np.quantile(self.clean[self.clean!=0],1-x))
 
 # def getLowerCutoff(self, binNum):
 #     """
@@ -128,11 +129,11 @@ temp = Band(processed, 2, 3, "Temperature")
 
 
 
-# runProcessing(salinity, cloudBand, 10)
+runProcessing(salinity, cloudBand, 10)
 # print(salinity.name, make_histogram(salinity))
 
 
-runProcessing(temp, cloudBand, 10)
+# runProcessing(temp, cloudBand, 10)
 # print(temp.name, make_histogram(temp))
 # print(temp.length*.001)
 
