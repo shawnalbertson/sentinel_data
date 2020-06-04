@@ -26,27 +26,8 @@ def runProcessing(band, cloudBand, resolution):
     band.array[band.clean > band.upperCutoff]=np.nan
     band.array[band.clean < band.lowerCutoff]=np.nan
 
-# Remove 'FILTER 1' values (previously left for counting)
-    band.array[band.clean == np.pi] = np.nan
-
-
     band.display(resolution)
 
-def helpLowerCutoff(band, binNum):
-    """
-    Want to make a histogram to represent where data is
-    """
-    # band.array[band.clean>band.mean+band.std*3]=0
-    binSize, bounds = np.histogram(band.clean[band.clean!=0], binNum)
-    # print(binSize)
-    biggestBin = np.max(binSize)
-    # print(biggestBin)
-    for x in binSize:
-        if x > biggestBin*.004:
-            binLevel = np.where(binSize==x)[0][0]
-            return bounds[binLevel]
-
-    # return bounds[binLevel]
 
 
 

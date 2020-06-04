@@ -1,7 +1,9 @@
 import gdal
 import numpy as np
 import numpy.ma as ma
+import pandas as pd
 import matplotlib.pyplot as plt
+import mplcursors
 from helperFunctions import *
 import time
 
@@ -17,6 +19,30 @@ class Data:
         self.num_bands = self.dataObject.RasterCount
         self.cols = self.dataObject.RasterXSize
         self.rows = self.dataObject.RasterYSize
+
+
+
+
+## Trying to figure out geographic location
+    def geoTrans(self):
+        geoTrans = self.dataObject.GetGeoTransform()
+        return geoTrans
+
+    def spatialRef(self):
+        spatialRef = self.dataObject.GetSpatialRef()
+        return spatialRef
+
+    def projectRef(self):
+        projectRef = self.dataObject.GetProjectionRef()
+        return projectRef
+
+    def project(self):
+        project = self.dataObject.GetProjection()
+        return project
+
+##
+
+
 
 class Band:
     """
@@ -40,9 +66,14 @@ class Band:
 # Get array
         self.array = self.band.ReadAsArray().astype(np.float)
 
+# Make alternative array for comparing (numpy doesn't like '>' with np.nan)
+        self.clean = np.nan_to_num(self.array)
 
-# FILTER1:  Remove extreme outliers (4 standard deviations) -> set to PI
-        self.array[np.nan_to_num(self.array)>np.nanmean(self.array)+np.nanstd(self.array)*4] = np.pi
+# Calculate .5% quantile as cutoff to make visualization cleaner
+        quant = .005
+        self.lowerCutoff = int(np.quantile(self.clean[self.clean!=0],quant))
+        self.upperCutoff = int(np.quantile(self.clean[self.clean!=0],1-quant))
+
 
 # Gather important statistics accounting for nan
 # Standard deviation, mean, min, and max
@@ -53,51 +84,37 @@ class Band:
         self.length = len(self.array.flatten())
 
 
-# Make alternative array for comparing (numpy doesn't like '>' with np.nan)
-        self.clean = np.nan_to_num(self.array)
-
-
-        # self.upperCutoff = 180
-        # This is a hard coded value that may want to change depending on the data
-        # self.lowerCutoff = 50
-
-# Trying some stuff
-        # self.upperCutoff = int(self.mean + self.cutoff * self.std)
-        # self.lowerCutoff = int(helpLowerCutoff(self,50))
-
-        x = .005
-        self.lowerCutoff = int(np.quantile(self.clean[self.clean!=0],x))
-        self.upperCutoff = int(np.quantile(self.clean[self.clean!=0],1-x))
-
-# def getLowerCutoff(self, binNum):
-#     """
-#     Split all data into even bins
-#     Find the largest bin
-#     Use it as a reference for the lower cutoff value
-#     """
-#     # band.array[band.clean>band.mean+band.std*3]=0
-#     binSize, bounds = np.histogram(self.clean[self.clean!=0], binNum)
-#
-#     biggestBin = np.max(binSize)
-#     for x in binSize:
-#         if x > biggestBin*.01:
-#             binLevel = np.where(binSize==x)[0][0]
-#             continue
-#
-#     self.lowerCutoff = bounds[binLevel]
-#     return
-
     def display(self, resolution=50):
         """
         Visualize the band using matplot lib contourf
         """
-        fig = plt.figure(figsize = (12, 12))
-        ax = fig.add_subplot(111)
+        # fig = plt.figure(figsize = (12, 12))
+        # ax = fig.add_subplot(111)
+
+        fig, ax = plt.subplots(figsize = (12,12))
         thisPlot = plt.contourf(self.array, cmap = "ocean",
         levels = list(range(self.lowerCutoff, self.upperCutoff, resolution)))
+
         plt.title("%s | Lower cutoff = %d, Upper cutoff = %d" % (self.name, self.lowerCutoff, self.upperCutoff))
         cbar = plt.colorbar()
         plt.gca().set_aspect('equal', adjustable='box')
+
+
+        cursor =  mplcursors.cursor()
+        #
+        # @cursor.connect("add")
+        # def on_add(sel):
+        #     ann = sel.annotation
+        #     # `cf.collections.index(sel.artist)` is the index of the selected line
+        #     # among all those that form the contour plot.
+        #     # `cf.cvalues[...]` is the corresponding value.
+        #     ann.set_text("{}\nz={:.3g}".format(
+        #         ann.get_text(), cf.cvalues[cf.collections.index(sel.artist)]))
+
+
+# This shows data point on mouse hover - very slow
+        # mplcursors.cursor(hover=True)
+
         plt.show()
 
 
@@ -123,13 +140,19 @@ cloudBand = Band(original, 16, 3, "Cloud Mask")
 salinity = Band(processed, 1, 3, "Salinity")
 temp = Band(processed, 2, 3, "Temperature")
 
+# print(original.geoTrans())
+# print(original.spatialRef())
+# print(original.projectRef())
+# print(original.project())
+
+
 # testArray = salinity
 # print(np.count_nonzero(np.isnan(testArray.array)))
 # print(np.count_nonzero(testArray.array==0))
 
 
 
-runProcessing(salinity, cloudBand, 10)
+# runProcessing(salinity, cloudBand, 10)
 # print(salinity.name, make_histogram(salinity))
 
 
