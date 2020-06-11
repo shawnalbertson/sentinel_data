@@ -20,30 +20,6 @@ class Data:
         self.cols = self.dataObject.RasterXSize
         self.rows = self.dataObject.RasterYSize
 
-
-
-
-## Trying to figure out geographic location
-    def geoTrans(self):
-        geoTrans = self.dataObject.GetGeoTransform()
-        return geoTrans
-
-    def spatialRef(self):
-        spatialRef = self.dataObject.GetSpatialRef()
-        return spatialRef
-
-    def projectRef(self):
-        projectRef = self.dataObject.GetProjectionRef()
-        return projectRef
-
-    def project(self):
-        project = self.dataObject.GetProjection()
-        return project
-
-##
-
-
-
 class Band:
     """
     Band class to access data from particular band in dataset
@@ -53,6 +29,10 @@ class Band:
         self.dataset = dataset
         self.bandNumber = bandNumber
         self.name = name
+        if name == 'Salinity':
+            self.unit = 'ppm'
+        elif name == 'Temperature':
+            self.unit = 'degrees Celsius x10'
 
 # def getArray(self):
         try:
@@ -69,7 +49,7 @@ class Band:
         self.clean = np.nan_to_num(self.array)
 
 # Calculate .5% quantile as cutoff to make visualization cleaner
-        quant = .005
+        quant = .01
         self.lowerCutoff = int(np.quantile(self.clean[self.clean!=0],quant))
         self.upperCutoff = int(np.quantile(self.clean[self.clean!=0],1-quant))
 
@@ -83,15 +63,14 @@ class Band:
         self.length = len(self.array.flatten())
 
 
-
-    def display(self, resolution=50):
+    def display(self, resolution=10):
         """
-        Visualize the band using matplot lib contourf
+        Method of band class which can be used to visualize the numpy array
+        matplotlib contourf. Does not include geographic information
         """
-        # fig = plt.figure(figsize = (12, 12))
-        # ax = fig.add_subplot(111)
-
         fig, ax = plt.subplots(figsize = (12,12))
+
+# Upper and lower bounds determined by cutoffs from quantile filter
         thisPlot = plt.contourf(self.array, cmap = "ocean",
         levels = list(range(self.lowerCutoff, self.upperCutoff, resolution)))
 

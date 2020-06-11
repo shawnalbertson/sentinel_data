@@ -5,7 +5,7 @@ It is designed to interpret GeoTIFF files from the Sentinel-2 MultiSpectral Inst
 which gathers satellite data from across the globe. More information about this data
 can be found here: https://developers.google.com/earth-engine/datasets/catalog/COPERNICUS_S2.
 
-Specifically, the scripts readtif.py and helperFunctions.py work to load and read the
+The scripts runProcessing.py and gdalClasses.py work to load and read the
 data in from a Sentinel-2 GeoTIFF file, identify the presence of clouds, and use this
 information to modify another GeoTIFF file.
 
@@ -20,12 +20,21 @@ Follow instruction at: https://matplotlib.org/users/installing.html
 ### NumPy
 Follow instructions at: https://scipy.org/install.html
 
-## Running the program
-Download the appropriate libraries and scripts from this repository. Open readtif.py
-and change the file names depending on their location on your machine. The current
-arrangement assumes you have three files on hand: 2 from Sentinel-2 data and one
-which you want to modify. The 2 Sentinel-2 files should be called "original" and
-"unprocessed." The final file should be called "processed."
+### Pandas
+Follow instructions at: https://pandas.pydata.org/getting_started.html
 
-Finally, uncomment one or both of the last two blocks of code and run readtif.py
-in python. This will open a matplotlib figure window with the result.
+### mplcursors
+Follow instructions at: https://pypi.org/project/mplcursors/
+
+## Running the program
+Download the appropriate libraries and scripts from this repository.
+
+Open runProcessing.py in a text editor. In the function chooseFile(), change the
+file names to match their location on your machine.
+
+You need two files to run these scripts. The raw file from Sentinel-2 should be
+called original_file, and the processed file from Medina-Lopez's neural net should
+be called processed_file.
+
+To change specifics about the Matplotlib visualization, changes should be made
+in the geoDisplay() function in runProcessing.py. 
